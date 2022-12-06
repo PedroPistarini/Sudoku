@@ -1,0 +1,1122 @@
+.model small
+
+;Pula linha
+pula_linha macro
+
+    mov ah, 02
+    mov dl, 10
+    int 21h
+
+endm
+
+;<space> teclado
+espaco macro
+
+    mov ah, 02
+    mov dl, 32
+    int 21h
+
+endm
+
+; Limpa tela
+limpa_tela macro
+
+    mov ah, 00h
+    mov al, 03h
+    int 10h                      
+    mov cx, 02h
+
+    mov dh,1
+    mov dl,1
+    mov ah,02h
+    int 10h
+
+endm
+
+.stack 100h
+.data
+    
+    ; Variaveis
+    coluna db ?
+    linha db ?
+    valor db ?
+    dificuldade db ?
+
+    ; Cabeçalho
+    Titulo db     '<------------------------------- Sudoku - Assembly ----------------------------> $'
+    cabecalho db  '============================================================================== $'
+    letras_colunas db ,13,10,'                        a   b   c   d   e   f   g   h   i $'
+
+    ; Regras
+    regras1 db ,13,' 1- SUDOKU eh um jogo de raciocinio e logica! $'
+    regras2 db ,13,' 2- Complete as " ? " uilizando numeros de 1 a 9. $'
+    regras3 db ,13,' 3- Seguinte regra: Nao podem haver numeros repetidos nas linhas horizontais e  verticais $'
+    press db '  ->Pressione qualquer tecla para comecar!, Boa sorte!$'
+
+    ; Dificuldade
+    
+    seleciona_dificuldade db ,13,10, '-> Selecione um nivel de dificuldade! $'
+    dificuldade_facil db ,13,10, '[01] - Facil $'
+    dificuldade_medio db '[02] - Medio $'
+    pressione_um_numero db,13,10, 'Selecione um numero de 1 a 3: $'
+
+
+    ; Altera os valores
+    altera_coluna db '-> Digite a coluna a ser alterada : $'
+    altera_linha db '-> Digite a linha a ser alterada (1 a 9): $'
+    altera_valor1 db '-> Digite valor para ser alterado (1 a 9): $'
+
+
+    ; Validação 
+    possui db '-> Ja possui esse valor nessa posicao! $'
+
+    ; Encerramento
+    encerramento db ,13,10, '-> Se quiser encerrar aperte <enter> se nao, aperte qualquer tecla! $'
+    obrigado db ,13,10, '-> Obrigado por jogar!$'
+    resposta db ,13,10, ' -- RESPOSTA --: $'
+    vencerdor db ,13,10,' -- PARABENS VOCÊ CONSEGUIU -- $'
+  
+    
+    matriz_facil            db '????'
+                            db '42??'
+                            db '?31?'
+                            db '????'
+
+    matriz_resposta_facil   db '3142'
+                            db '4231'
+                            db '2314'
+                            db '1423'
+    
+
+    matriz_medio            db  '1??3??92?'
+                            db  '3??4??85?'
+                            db  '6??9?1?7?'
+                            db  '479?1????'
+                            db  '??2?6?1??'
+                            db  '?5?8?7??2'
+                            db  '?84??2??3'
+                            db  '?63??5??9'
+
+    matriz_resposta_medio   db  '145378926'
+                            db  '?397426851'
+                            db  '?628951374'
+                            db  '?479513268'
+                            db  '?832764195'
+                            db  '?516289437'
+                            db  '?951837642'
+                            db  '?784692513'
+                            db  '?263145789'
+                    
+.code
+
+;Espaço 30px
+    espacao proc
+
+        xor di,di
+        mov di, 20
+
+        volta:
+
+        espaco 
+
+        dec di
+        cmp di, 0
+        jne volta
+
+    ret
+    espacao endp
+
+; Não é mais necessário
+    entra_matriz proc
+
+        xor bx, bx
+        xor si, si
+
+        mov ch, 9                               ; Contador de linhas                         
+
+        outra_linha:
+        
+            mov cl, 9                       ; Contador de colunas
+            xor si, si              
+
+                outra_coluna:   
+               
+                    mov al, '?'
+
+                    mov matriz_medio[bx][si], al
+            
+                    inc si                      ; passando para a proximo numero
+                    dec cl                      ; Decrementa cl ( linha )
+                
+                jnz outra_coluna            ; Quando cl for 0 pula linha ( Matriz )
+
+            inc bx                      ; Adiciona 1 em bx = Linhas
+
+            
+
+            mov ah, 02                  
+            mov dl, 10                  ; Pula linha
+            int 21h
+
+            add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
+            dec ch                      ; Tira 1 do contador de linhas
+            
+        jnz outra_linha                 
+    
+    ret
+    entra_matriz endp
+
+    imp_matriz_facil proc
+
+        xor bx, bx
+        xor si, si
+
+        mov ch, 4                               ; Contador de linhas                         
+        xor dh,dh
+
+        outra_linha1:
+        
+            mov cl, 4                       ; Contador de colunas
+            xor si, si    
+
+                call espacao
+
+                inc dh
+                mov dl,dh
+                add dl, 30h
+                mov ah, 02
+                int 21h
+                mov ah,02
+                mov dl, '|'
+                int 21h
+
+                espaco
+                espaco 
+                
+                outra_coluna1:   
+
+                    mov ah, 02                 ; Printando numeros
+                    mov dl, matriz_facil[bx][si]                    
+                    int 21h                         
+                  
+                    espaco
+                    espaco
+                    espaco
+                    
+                    inc si                      ; passando para a proximo numero
+                    dec cl                      ; Decrementa cl ( linha )
+                
+                jnz outra_coluna1            ; Quando for 0 pula linha
+           
+            inc bx                      ; Adiciona 1 em bx = Linhas
+                        
+            
+
+            mov ah, 02                  
+            mov dl, 10                  ; Pula linha
+            int 21h
+
+            add bx, 5                    ; Adiciona para entender que estou indo para proxima linha
+            dec ch                      ; Tira 1 do contador de linhas
+            
+        jnz outra_linha1       
+    
+    ret
+    imp_matriz_facil endp
+
+    imp_matriz_resposta_facil proc
+
+        
+        xor bx, bx
+        xor si, si
+
+        mov ch, 4                               ; Contador de linhas                         
+        xor dh,dh
+
+        outra_linha0001:
+        
+            mov cl, 4                       ; Contador de colunas
+            xor si, si    
+
+                call espacao
+
+                inc dh
+                mov dl,dh
+                add dl, 30h
+                mov ah, 02
+                int 21h
+                mov ah,02
+                mov dl, '|'
+                int 21h
+
+                espaco
+                espaco 
+                
+                outra_coluna0001:   
+
+                    mov ah, 02                 ; Printando numeros
+                    mov dl, matriz_resposta_facil[bx][si]                    
+                    int 21h                         
+                  
+                    espaco
+                    espaco
+                    espaco
+                    
+                    inc si                      ; passando para a proximo numero
+                    dec cl                      ; Decrementa cl ( linha )
+                
+                jnz outra_coluna0001            ; Quando for 0 pula linha
+           
+            inc bx                      ; Adiciona 1 em bx = Linhas
+                        
+        
+            pula_linha
+
+            add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
+            dec ch                      ; Tira 1 do contador de linhas
+            
+        jnz outra_linha0001       
+    
+    ret
+    imp_matriz_resposta_facil endp
+
+; Função de impressão de matrizes
+    imp_matriz_medio proc
+
+        xor bx, bx
+        xor si, si
+
+        mov ch, 9                              ; Contador de linhas                         
+        xor dh,dh
+
+        outra_linha001:
+        
+            mov cl, 9                       ; Contador de colunas
+            xor si, si    
+
+                call espacao
+
+                inc dh
+                mov dl,dh
+                add dl, 30h
+                mov ah, 02
+                int 21h
+                mov ah,02
+                mov dl, '|'
+                int 21h
+
+                espaco
+                espaco 
+                
+                outra_coluna001:   
+
+                    mov ah, 02                 ; Printando numeros
+                    mov dl, matriz_medio[bx][si]                    
+                    int 21h                         
+                  
+                    espaco
+                    espaco
+                    espaco
+                    
+                    inc si                      ; passando para a proximo numero
+                    dec cl                      ; Decrementa cl ( linha )
+                
+                jnz outra_coluna001            ; Quando for 0 pula linha
+           
+            inc bx                      ; Adiciona 1 em bx = Linhas
+                        
+            pula_linha
+
+            add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
+            dec ch                      ; Tira 1 do contador de linhas
+            
+        jnz outra_linha001       
+    
+    ret
+    imp_matriz_medio endp
+
+; Função de impressão de matrizes resposta
+    imp_matriz_resposta_medio proc
+
+        xor bx, bx
+        xor si, si
+
+        mov ch, 9                               ; Contador de linhas                         
+        xor dh,dh
+
+        outra_linha01:
+        
+            mov cl, 9                       ; Contador de colunas
+            xor si, si    
+
+                call espacao
+
+                inc dh
+                mov dl,dh
+                add dl, 30h
+                mov ah, 02
+                int 21h
+                mov ah,02
+                mov dl, '|'
+                int 21h
+
+                espaco
+                espaco 
+                
+                outra_coluna01:   
+
+                    mov ah, 02                 ; Printando numeros
+                    mov dl, matriz_resposta_medio[bx][si]                    
+                    int 21h                         
+                  
+                    espaco
+                    espaco
+                    espaco
+                    
+                    inc si                      ; passando para a proximo numero
+                    dec cl                      ; Decrementa cl ( linha )
+                
+                jnz outra_coluna01            ; Quando for 0 pula linha
+           
+            inc bx                      ; Adiciona 1 em bx = Linhas
+                        
+            
+
+            mov ah, 02                  
+            mov dl, 10                  ; Pula linha
+            int 21h
+
+            add bx, 9                   ; Adiciona para entender que estou indo para proxima linha
+            dec ch                      ; Tira 1 do contador de linhas
+            
+        jnz outra_linha01       
+    
+    ret
+
+        ret
+    imp_matriz_resposta_medio endp
+
+; Entrada de colunas pra validação
+    entra_coluna proc
+
+        mov ah, 09
+        lea dx, altera_coluna
+        int 21h
+
+        mov ah, 01
+        int 21h
+
+        mov coluna, al
+
+        ret
+    entra_coluna endp
+
+; Entrada de linhas para validação
+    entra_linha proc
+
+        mov ah, 09
+        lea dx, altera_linha
+        int 21h
+
+        mov ah, 01
+        int 21h
+
+        mov linha, al
+
+        ret
+    entra_linha endp
+
+    altera_valor proc
+
+        pula_linha
+
+        outro_numero:
+
+        mov ah, 09 
+        lea dx, altera_valor1
+        int 21h
+        
+        mov ah, 01                             
+        int 21h 
+
+        mov valor, al
+
+        call nivel_dificuldade
+
+        cmp al, 31h
+        jne facil
+
+            mov al, valor
+
+            cmp al, matriz_facil[bx][si]
+            jne nao_igual
+
+                pula_linha
+
+                mov ah, 09 
+                lea dx, possui
+                int 21h
+                
+                pula_linha
+
+                jmp outro_numero
+
+            nao_igual:
+        
+            mov matriz_facil[bx][si], al
+
+            jmp fim_altera_dificuldade
+
+        facil:
+
+        cmp al, 32h
+        jne medio
+
+            cmp al, matriz_medio[bx][si]
+            jne nao_igual1
+
+                pula_linha
+
+                mov ah, 09 
+                lea dx, possui
+                int 21h
+                
+                pula_linha
+
+                jmp outro_numero
+
+            nao_igual1:
+        
+            mov matriz_medio[bx][si], al
+
+            jmp fim_altera_dificuldade
+
+        medio:
+
+        fim_altera_dificuldade:
+    ret
+    altera_valor endp
+
+    nivel_dificuldade proc
+
+        mov al, dificuldade
+
+    ret
+    nivel_dificuldade endp
+
+; Altera o valor da posição indicada
+    verifica_posicao proc 
+
+        call entra_coluna        
+
+            cmp coluna, 'a'
+            jne coluna_0
+            
+                mov bx, 0
+                pula_linha
+
+                call entra_linha
+
+                cmp linha, 31h
+                jne linha_1
+
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+                    
+                linha_1:
+                
+                cmp linha, 32h
+                jne linha_2
+
+                    mov bx, 5
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_2:
+
+                cmp linha, 33h
+                jne linha_3
+
+                    mov bx, 10
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_3:
+
+            coluna_0:
+
+            cmp coluna, 'a'
+            jne coluna_00
+
+                cmp linha, 34h
+                jne linha_4
+
+                    mov bx, 15
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_4:
+
+                cmp linha, 35h
+                jne linha_5
+
+                    mov bx, 20
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_5:
+
+                cmp linha, 36h
+                jne linha_6
+
+                    mov bx, 25
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_6:
+
+            coluna_00:
+
+            cmp coluna, 'a'
+            jne coluna_000
+
+                cmp linha, 37h
+                jne linha_7
+
+                    mov bx, 30
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_7:
+
+                cmp linha, 38h
+                jne linha_8
+
+                    mov bx, 35
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_8:
+
+                cmp linha, 39h
+                jne linha_9
+
+                    mov bx, 40
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_9:
+
+            coluna_000:
+
+
+            cmp coluna, 'b'
+            jne coluna_1
+                
+                mov bx, 0
+
+                pula_linha
+
+                call entra_linha
+
+                cmp linha, 31h
+                jne linha_11
+
+                    mov si, 1
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_11:
+
+                cmp linha, 32h
+                jne linha_22
+
+                    mov bx, 5
+                    mov si, 1
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+                
+                linha_22:
+
+                cmp linha, 33h
+                jne linha_33
+
+                    mov bx, 10
+                    mov si, 1
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+                
+                linha_33:
+
+            coluna_1:
+
+            cmp coluna, 'b'
+            jne coluna_11
+
+                cmp linha, 34h
+                jne linha_44
+
+                    mov bx, 15
+                    mov si, 1
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+                
+                linha_44:
+
+                cmp linha, 35h
+                jne linha_55
+
+                    mov bx, 20
+                    mov si, 1
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+                
+                linha_55:  
+
+                cmp linha, 36h
+                jne linha_66
+
+                    mov bx, 25
+                    mov si, 1
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_66: 
+
+
+            coluna_11:
+
+            cmp coluna, 'b'
+            jne coluna_111
+
+                cmp linha, 37h
+                jne linha_77
+
+                    mov bx, 30
+                    mov si, 1
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+                
+                linha_77:
+
+                cmp linha, 38h
+                jne linha_88
+
+                    mov bx, 35
+                    mov si, 1
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+                
+                linha_88:  
+
+                cmp linha, 39h
+                jne linha_99
+
+                    mov bx, 40
+                    mov si, 1
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_99: 
+
+            coluna_111:
+
+            cmp coluna, 'c'
+            jne coluna_2
+
+                mov bx, 0
+
+                pula_linha
+
+                call entra_linha
+
+                cmp linha, 31h
+                jne linha_111
+
+                    mov si, 2
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+
+                linha_111:
+
+                cmp linha, 32h
+                jne linha_222
+
+                    mov bx, 5
+                    mov si, 2
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+                
+                linha_222:
+
+                cmp linha, 33h
+                jne linha_333
+
+                    mov bx, 10
+                    mov si, 2
+                    call altera_valor
+                    limpa_tela
+                    jmp fim
+                
+                linha_333:
+
+            coluna_2:
+
+        cmp coluna, 'f'
+        jne coluna_6
+
+            mov bx, 0
+
+            pula_linha
+
+            call entra_linha
+
+            cmp linha, 31h
+            jne linha_111111
+
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim
+
+            linha_111111:
+
+            cmp linha, 32h
+            jne linha_222222
+
+                mov bx, 5
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim
+            
+            linha_222222:
+
+            cmp linha, 33h
+            jne linha_333333
+
+                mov bx, 10
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim
+            
+            linha_333333:
+
+        coluna_6:
+           
+        fim:
+        ret
+    verifica_posicao endp
+
+; Verifica as linhas e colunas com a reposta correta
+  ;  verifica_resposta_certa proc
+
+        ;cmp matriz[bx][si], matriz_resposta[bx][si]
+       ; jne nao_igual0
+
+           ; mov ah, 09 
+            ;lea dx, vencedor
+            ;int 21h
+
+        ;nao_igual0:
+
+       ; ret
+   ; verifica_resposta_certa endp
+
+; Printa cabeçalho
+    cabecalho1 proc
+
+        mov ah, 09
+        lea dx, cabecalho
+        int 21h
+
+        mov ah, 09
+        lea dx, Titulo
+        int 21h
+
+        mov ah, 09
+        lea dx, cabecalho
+        int 21h
+
+    ret
+    cabecalho1 endp
+
+; Printa regras
+    regra proc
+
+        pula_linha
+
+        mov ah, 09
+        lea dx, regras1
+        int 21h
+
+        pula_linha
+
+        mov ah, 09
+        lea dx, regras2
+        int 21h
+
+        pula_linha
+
+        mov ah, 09
+        lea dx, regras3
+        int 21h
+
+        pula_linha
+        pula_linha
+
+        mov ah, 09 
+        lea dx, cabecalho
+        int 21h
+
+        pula_linha
+        pula_linha
+
+        mov ah, 09 
+        lea dx, press
+        int 21h
+
+        mov ah, 09 
+        lea dx, cabecalho
+        int 21h
+
+        pula_linha
+
+        mov ah, 09 
+        lea dx, seleciona_dificuldade
+        int 21h
+
+        pula_linha
+
+        mov ah, 09 
+        lea dx, dificuldade_facil
+        int 21h
+
+        pula_linha
+
+        mov ah, 09 
+        lea dx, dificuldade_medio
+        int 21h
+
+        pula_linha
+
+        mov ah, 09 
+        lea dx, pressione_um_numero
+        int 21h
+
+        mov ah, 01
+        int 21h
+
+        mov dificuldade, al
+        
+
+        call nivel_dificuldade
+
+    ret
+    regra endp
+
+; Segmento
+    segmento proc
+
+        mov ax, @data
+        mov ds, ax
+
+        ret
+    segmento endp
+
+; Encerramento
+    encerra proc
+
+        mov ah, 09
+        lea dx, encerramento
+        int 21h
+
+        mov ah, 01
+        int 21h
+        
+        cmp al, 13
+        je encerra1
+
+            pula_linha
+
+            call verifica_posicao
+            ;call verifica_resposta_certa
+
+            jmp continua
+
+        encerra1:
+
+        limpa_tela
+
+        call cabecalho1
+
+        pula_linha
+        
+        call espacao
+
+        mov ah, 09
+        lea dx, resposta
+        int 21h
+
+        mov ah, 09
+        lea dx, letras_colunas
+        int 21h
+
+        pula_linha
+        pula_linha
+
+        call valida_dificuldade_resposta
+
+        pula_linha
+        call espacao
+        mov ah, 09
+        lea dx, obrigado
+        int 21h
+
+        mov ah, 4ch
+        int 21h
+    ret
+    encerra endp
+
+    valida_dificuldade proc 
+
+        call nivel_dificuldade
+        cmp al, 31h
+        jne facil1
+
+    
+            call imp_matriz_facil
+            jmp continua_programa
+
+        facil1:
+
+        cmp al, 32h
+        jne medio1
+
+            call imp_matriz_medio
+            jmp continua_programa
+
+        medio1:
+
+        continua_programa:
+    ret
+    valida_dificuldade endp
+
+    valida_dificuldade_resposta proc
+
+        call nivel_dificuldade
+        cmp al, 31h
+        jne facil01
+
+    
+            call imp_matriz_resposta_facil
+            jmp continua_programa0
+
+        facil01:
+
+        cmp al, 32h
+        jne medio01
+
+            call imp_matriz_resposta_medio
+            jmp continua_programa0
+
+        medio01:
+
+        continua_programa0:
+
+
+        ret
+    valida_dificuldade_resposta endp
+    main proc
+    
+        call segmento
+
+        ;call entra_matriz
+
+        limpa_tela
+
+        call cabecalho1
+        call regra
+
+        limpa_tela
+
+        call cabecalho1
+
+        mov ah, 09
+        lea dx, letras_colunas
+        int 21h
+
+        pula_linha
+        pula_linha
+
+
+        call valida_dificuldade
+
+        mov cx, 999
+
+        outro_valor:
+        
+        pula_linha
+
+        call verifica_posicao
+        
+        continua:
+
+        call cabecalho1
+
+        mov ah, 09
+        lea dx, letras_colunas
+        int 21h
+
+        pula_linha
+        pula_linha
+
+
+        call valida_dificuldade
+
+        call encerra
+        
+        loop outro_valor 
+    
+    
+    main endp
+END main
