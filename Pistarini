@@ -1,3 +1,5 @@
+TITLE Pedro Di Grazia (22002293), Pedro Pistarini (22000341)
+
 .model small
 
 ;Pula linha
@@ -54,7 +56,6 @@ endm
     press db '  ->Pressione qualquer tecla para comecar!, Boa sorte!$'
 
     ; Dificuldade
-    
     seleciona_dificuldade db ,13,10, '-> Selecione um nivel de dificuldade! $'
     dificuldade_facil db ,13,10, '[01] - Facil $'
     dificuldade_medio db '[02] - Medio $'
@@ -68,44 +69,46 @@ endm
 
 
     ; Validação 
-    possui db '-> Ja possui esse valor nessa posicao! $'
+    ja_possui db '-> Ja possui esse valor nessa posicao! $'
 
     ; Encerramento
     encerramento db ,13,10, '-> Se quiser encerrar aperte <enter> se nao, aperte qualquer tecla! $'
     obrigado db ,13,10, '-> Obrigado por jogar!$'
     resposta db ,13,10, ' -- RESPOSTA --: $'
     vencerdor db ,13,10,' -- PARABENS VOCÊ CONSEGUIU -- $'
+    jogar_novamente db ,13,10, '-> Deseja jogar novamente? [s / n]: $'
   
     
-    matriz_facil            db '????'
-                            db '42??'
-                            db '?31?'
-                            db '????'
+    matriz_facil            db '????$'
+                            db '42??$'
+                            db '?31?$'
+                            db '????$'
 
-    matriz_resposta_facil   db '3142'
-                            db '4231'
-                            db '2314'
-                            db '1423'
+    matriz_resposta_facil   db '3142$'
+                            db '4231$'
+                            db '2314$'
+                            db '1423$'
     
 
-    matriz_medio            db  '1??3??92?'
-                            db  '3??4??85?'
-                            db  '6??9?1?7?'
-                            db  '479?1????'
-                            db  '??2?6?1??'
-                            db  '?5?8?7??2'
-                            db  '?84??2??3'
-                            db  '?63??5??9'
+    matriz_medio            db  '1??3??92?$'
+                            db  '3??4??85?$'
+                            db  '6??9?1?7?$'
+                            db  '479?1????$'
+                            db  '??2?6?1??$'
+                            db  '?162?9?37$'
+                            db  '?5?8?7??2$'
+                            db  '?84??2??3$'
+                            db  '?63??5??9$'
 
-    matriz_resposta_medio   db  '145378926'
-                            db  '?397426851'
-                            db  '?628951374'
-                            db  '?479513268'
-                            db  '?832764195'
-                            db  '?516289437'
-                            db  '?951837642'
-                            db  '?784692513'
-                            db  '?263145789'
+    matriz_resposta_medio   db  '145378926$'
+                            db  '397426851$'
+                            db  '628951374$'
+                            db  '479513268$'
+                            db  '832764195$'
+                            db  '516289437$'
+                            db  '951837642$'
+                            db  '784692513$'
+                            db  '263145789$'
                     
 .code
 
@@ -166,6 +169,7 @@ endm
     ret
     entra_matriz endp
 
+; Imprime Matriz
     imp_matriz_facil proc
 
         xor bx, bx
@@ -210,13 +214,9 @@ endm
            
             inc bx                      ; Adiciona 1 em bx = Linhas
                         
-            
+            pula_linha
 
-            mov ah, 02                  
-            mov dl, 10                  ; Pula linha
-            int 21h
-
-            add bx, 5                    ; Adiciona para entender que estou indo para proxima linha
+            add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
             dec ch                      ; Tira 1 do contador de linhas
             
         jnz outra_linha1       
@@ -224,6 +224,7 @@ endm
     ret
     imp_matriz_facil endp
 
+; Imprime Matriz Resposta
     imp_matriz_resposta_facil proc
 
         
@@ -327,7 +328,7 @@ endm
                         
             pula_linha
 
-            add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
+            add bx, 9                   ; Adiciona para entender que estou indo para proxima linha
             dec ch                      ; Tira 1 do contador de linhas
             
         jnz outra_linha001       
@@ -426,6 +427,7 @@ endm
         ret
     entra_linha endp
 
+; Função De alteração de valor
     altera_valor proc
 
         pula_linha
@@ -454,7 +456,7 @@ endm
                 pula_linha
 
                 mov ah, 09 
-                lea dx, possui
+                lea dx, ja_possui
                 int 21h
                 
                 pula_linha
@@ -472,13 +474,15 @@ endm
         cmp al, 32h
         jne medio
 
+            mov al, valor
+
             cmp al, matriz_medio[bx][si]
             jne nao_igual1
 
                 pula_linha
 
                 mov ah, 09 
-                lea dx, possui
+                lea dx, ja_possui
                 int 21h
                 
                 pula_linha
@@ -497,6 +501,7 @@ endm
     ret
     altera_valor endp
 
+; Passagem de registrador
     nivel_dificuldade proc
 
         mov al, dificuldade
@@ -504,12 +509,10 @@ endm
     ret
     nivel_dificuldade endp
 
-; Altera o valor da posição indicada
-    verifica_posicao proc 
+; Verificando COLUNAS e LINHAS
+    coluna_a proc
 
-        call entra_coluna        
-
-            cmp coluna, 'a'
+        cmp coluna, 'a'
             jne coluna_0
             
                 mov bx, 0
@@ -531,7 +534,7 @@ endm
                 cmp linha, 32h
                 jne linha_2
 
-                    mov bx, 5
+                    mov bx, 10
                     mov si, 0
 
                     call altera_valor
@@ -543,7 +546,7 @@ endm
                 cmp linha, 33h
                 jne linha_3
 
-                    mov bx, 10
+                    mov bx, 20
                     mov si, 0
 
                     call altera_valor
@@ -560,7 +563,7 @@ endm
                 cmp linha, 34h
                 jne linha_4
 
-                    mov bx, 15
+                    mov bx, 30
                     mov si, 0
 
                     call altera_valor
@@ -572,7 +575,7 @@ endm
                 cmp linha, 35h
                 jne linha_5
 
-                    mov bx, 20
+                    mov bx, 40
                     mov si, 0
 
                     call altera_valor
@@ -584,7 +587,7 @@ endm
                 cmp linha, 36h
                 jne linha_6
 
-                    mov bx, 25
+                    mov bx, 50
                     mov si, 0
 
                     call altera_valor
@@ -601,7 +604,7 @@ endm
                 cmp linha, 37h
                 jne linha_7
 
-                    mov bx, 30
+                    mov bx, 60
                     mov si, 0
 
                     call altera_valor
@@ -613,7 +616,7 @@ endm
                 cmp linha, 38h
                 jne linha_8
 
-                    mov bx, 35
+                    mov bx, 70
                     mov si, 0
 
                     call altera_valor
@@ -625,7 +628,7 @@ endm
                 cmp linha, 39h
                 jne linha_9
 
-                    mov bx, 40
+                    mov bx, 80
                     mov si, 0
 
                     call altera_valor
@@ -636,8 +639,14 @@ endm
 
             coluna_000:
 
+        fim:
+        ret
+    coluna_a endp
 
-            cmp coluna, 'b'
+    coluna_b proc
+
+        mov al, coluna
+        cmp al, 'b'
             jne coluna_1
                 
                 mov bx, 0
@@ -652,14 +661,14 @@ endm
                     mov si, 1
                     call altera_valor
                     limpa_tela
-                    jmp fim
+                    jmp fim1
 
                 linha_11:
 
                 cmp linha, 32h
                 jne linha_22
 
-                    mov bx, 5
+                    mov bx, 10
                     mov si, 1
                     call altera_valor
                     limpa_tela
@@ -670,138 +679,229 @@ endm
                 cmp linha, 33h
                 jne linha_33
 
-                    mov bx, 10
+                    mov bx, 20
                     mov si, 1
                     call altera_valor
                     limpa_tela
-                    jmp fim
+                    jmp fim1
                 
                 linha_33:
 
             coluna_1:
 
-            cmp coluna, 'b'
+            cmp al, 'b'
             jne coluna_11
 
                 cmp linha, 34h
                 jne linha_44
 
-                    mov bx, 15
+                    mov bx, 30
                     mov si, 1
                     call altera_valor
                     limpa_tela
-                    jmp fim
+                    jmp fim1
                 
                 linha_44:
 
                 cmp linha, 35h
                 jne linha_55
 
-                    mov bx, 20
+                    mov bx, 40
                     mov si, 1
                     call altera_valor
                     limpa_tela
-                    jmp fim
+                    jmp fim1
                 
                 linha_55:  
 
                 cmp linha, 36h
                 jne linha_66
 
-                    mov bx, 25
+                    mov bx, 50
                     mov si, 1
                     call altera_valor
                     limpa_tela
-                    jmp fim
+                    jmp fim1
 
                 linha_66: 
 
 
             coluna_11:
 
-            cmp coluna, 'b'
+            cmp al, 'b'
             jne coluna_111
 
                 cmp linha, 37h
                 jne linha_77
 
-                    mov bx, 30
+                    mov bx, 60
                     mov si, 1
                     call altera_valor
                     limpa_tela
-                    jmp fim
+                    jmp fim1
                 
                 linha_77:
 
                 cmp linha, 38h
                 jne linha_88
 
-                    mov bx, 35
+                    mov bx, 70
                     mov si, 1
                     call altera_valor
                     limpa_tela
-                    jmp fim
+                    jmp fim1
                 
                 linha_88:  
 
                 cmp linha, 39h
                 jne linha_99
 
-                    mov bx, 40
+                    mov bx, 80
                     mov si, 1
                     call altera_valor
                     limpa_tela
-                    jmp fim
+                    jmp fim1
 
                 linha_99: 
 
-            coluna_111:
+        coluna_111:
 
-            cmp coluna, 'c'
-            jne coluna_2
+    fim1:
+    ret
+    coluna_b endp
 
-                mov bx, 0
+    coluna_c proc
 
-                pula_linha
+        cmp coluna, 'c'
+        jne coluna_2
 
-                call entra_linha
+            mov bx, 0
 
-                cmp linha, 31h
-                jne linha_111
+            pula_linha
 
-                    mov si, 2
-                    call altera_valor
-                    limpa_tela
-                    jmp fim
+            call entra_linha
 
-                linha_111:
+            cmp linha, 31h
+            jne linha_111
 
-                cmp linha, 32h
-                jne linha_222
+                mov si, 2
+                call altera_valor
+                limpa_tela
+                jmp fim2
 
-                    mov bx, 5
-                    mov si, 2
-                    call altera_valor
-                    limpa_tela
-                    jmp fim
-                
-                linha_222:
+            linha_111:
 
-                cmp linha, 33h
-                jne linha_333
+            cmp linha, 32h
+            jne linha_222
 
-                    mov bx, 10
-                    mov si, 2
-                    call altera_valor
-                    limpa_tela
-                    jmp fim
-                
-                linha_333:
+                mov bx, 10
+                mov si, 2
+                call altera_valor
+                limpa_tela
+                jmp fim2
+            
+            linha_222:
 
-            coluna_2:
+            cmp linha, 33h
+            jne linha_333
 
-        cmp coluna, 'f'
-        jne coluna_6
+                mov bx, 20
+                mov si, 2
+                call altera_valor
+                limpa_tela
+                jmp fim2
+            
+            linha_333:
+
+        coluna_2:
+
+        cmp coluna, 'c'
+        jne coluna_22
+
+
+            cmp linha, 34h
+            jne linha_1111
+
+                mov bx, 30
+                mov si, 2
+                call altera_valor
+                limpa_tela
+                jmp fim2
+
+            linha_1111:
+
+            cmp linha, 35h
+            jne linha_2222
+
+                mov bx, 40
+                mov si, 2
+                call altera_valor
+                limpa_tela
+                jmp fim2
+            
+            linha_2222:
+
+            cmp linha, 36h
+            jne linha_3333
+
+                mov bx, 50
+                mov si, 2
+                call altera_valor
+                limpa_tela
+                jmp fim2
+            
+            linha_3333:
+
+        coluna_22:
+
+        cmp coluna, 'c'
+        jne coluna_222
+
+            cmp linha, 37h
+            jne linha_11111
+
+                mov bx, 60
+                mov si, 2
+                call altera_valor
+                limpa_tela
+                jmp fim2
+
+            linha_11111:
+
+            cmp linha, 38h
+            jne linha_22222
+
+                mov bx, 70
+                mov si, 2
+                call altera_valor
+                limpa_tela
+                jmp fim2
+            
+            linha_22222:
+
+            cmp linha, 39h
+            jne linha_33333
+
+                mov bx, 80
+                mov si, 2
+                call altera_valor
+                limpa_tela
+                jmp fim2
+            
+            linha_33333:
+
+        coluna_222:
+
+    fim2:
+    ret
+    coluna_c endp
+
+    coluna_d proc
+
+        mov al, coluna
+
+        cmp al, 'd'
+        jne coluna_3
 
             mov bx, 0
 
@@ -812,40 +912,971 @@ endm
             cmp linha, 31h
             jne linha_111111
 
-                mov si, 5
+                mov si, 3
                 call altera_valor
                 limpa_tela
-                jmp fim
+                jmp fim3
 
             linha_111111:
 
             cmp linha, 32h
             jne linha_222222
 
-                mov bx, 5
-                mov si, 5
+                mov bx, 10
+                mov si, 3
                 call altera_valor
                 limpa_tela
-                jmp fim
+                jmp fim3
             
             linha_222222:
 
             cmp linha, 33h
             jne linha_333333
 
+                mov bx, 20
+                mov si, 3
+                call altera_valor
+                limpa_tela
+                jmp fim3
+            
+            linha_333333:
+
+        coluna_3:
+
+        
+        cmp coluna, 'd'
+        jne coluna_33
+
+    
+            cmp linha, 34h
+            jne linha_1111111
+
+                mov bx, 30
+                mov si, 3
+                call altera_valor
+                limpa_tela
+                jmp fim3
+
+            linha_1111111:
+
+            cmp linha, 35h
+            jne linha_2222222
+
+                mov bx, 40
+                mov si, 3
+                call altera_valor
+                limpa_tela
+                jmp fim3
+            
+            linha_2222222:
+
+            cmp linha, 36h
+            jne linha_3333333
+
+                mov bx, 50
+                mov si, 3
+                call altera_valor
+                limpa_tela
+                jmp fim3
+            
+            linha_3333333:
+
+        coluna_33:
+
+        mov al, coluna
+        cmp al, 'd'
+        jne coluna_333
+
+
+            cmp linha, 37h
+            jne linha_11111111
+
+                mov bx, 60
+                mov si, 3
+                call altera_valor
+                limpa_tela
+                jmp fim3
+
+            linha_11111111:
+
+            cmp linha, 38h
+            jne linha_22222222
+
+                mov bx, 70
+                mov si, 3
+                call altera_valor
+                limpa_tela
+                jmp fim3
+            
+            linha_22222222:
+
+            cmp linha, 39h
+            jne linha_33333333
+
+                mov bx, 80
+                mov si, 3
+                call altera_valor
+                limpa_tela
+                jmp fim3
+            
+            linha_33333333:
+
+        coluna_333:
+
+
+        fim3:
+        ret
+    coluna_d endp
+
+    coluna_e proc
+
+        mov al, coluna
+        cmp al, 'e'
+        jne coluna_4
+
+            mov bx, 0
+
+            pula_linha
+
+            call entra_linha
+
+            cmp linha, 31h
+            jne linha_111111111
+
+                mov si, 4
+                call altera_valor
+                limpa_tela
+                jmp fim4
+
+            linha_111111111:
+
+            cmp linha, 32h
+            jne linha_222222222
+
+                mov bx, 10
+                mov si, 4
+                call altera_valor
+                limpa_tela
+                jmp fim4
+            
+            linha_222222222:
+
+            cmp linha, 33h
+            jne linha_333333333
+
+                mov bx, 20
+                mov si, 4
+                call altera_valor
+                limpa_tela
+                jmp fim4
+            
+            linha_333333333:
+
+        coluna_4:
+
+        
+        cmp coluna, 'e'
+        jne coluna_44
+
+    
+            cmp linha, 34h
+            jne linha_1111111111
+
+                mov bx, 30
+                mov si, 4
+                call altera_valor
+                limpa_tela
+                jmp fim4
+
+            linha_1111111111:
+
+            cmp linha, 35h
+            jne linha_2222222222
+
+                mov bx, 40
+                mov si, 4
+                call altera_valor
+                limpa_tela
+                jmp fim4
+            
+            linha_2222222222:
+
+            cmp linha, 36h
+            jne linha_3333333333
+
+                mov bx, 50
+                mov si, 4
+                call altera_valor
+                limpa_tela
+                jmp fim4
+            
+            linha_3333333333:
+
+        coluna_44:
+
+        mov al, coluna
+        cmp al, 'e'
+        jne coluna_444
+
+
+            cmp linha, 37h
+            jne linha_11111111111
+
+                mov bx, 60
+                mov si, 4
+                call altera_valor
+                limpa_tela
+                jmp fim4
+
+            linha_11111111111:
+
+            cmp linha, 38h
+            jne linha_22222222222
+
+                mov bx, 70
+                mov si, 4
+                call altera_valor
+                limpa_tela
+                jmp fim4
+            
+            linha_22222222222:
+
+            cmp linha, 39h
+            jne linha_33333333333
+
+                mov bx, 80
+                mov si, 4
+                call altera_valor
+                limpa_tela
+                jmp fim4
+            
+            linha_33333333333:
+
+        coluna_444:
+
+
+        fim4:
+        ret
+    coluna_e endp
+
+    coluna_f proc
+
+        mov al, coluna
+        cmp al, 'f'
+        jne coluna_5
+
+            mov bx, 0
+
+            pula_linha
+
+            call entra_linha
+
+            cmp linha, 31h
+            jne linha_111111111111
+
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim5
+
+            linha_111111111111:
+
+            cmp linha, 32h
+            jne linha_222222222222
+
                 mov bx, 10
                 mov si, 5
                 call altera_valor
                 limpa_tela
-                jmp fim
+                jmp fim5
             
-            linha_333333:
+            linha_222222222222:
+
+            cmp linha, 33h
+            jne linha_333333333333
+
+                mov bx, 20
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim5
+            
+            linha_333333333333:
+
+        coluna_5:
+
+        
+        cmp coluna, 'f'
+        jne coluna_55
+
+    
+            cmp linha, 34h
+            jne linha_1111111111111
+
+                mov bx, 30
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim5
+
+            linha_1111111111111:
+
+            cmp linha, 35h
+            jne linha_2222222222222
+
+                mov bx, 40
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim5
+            
+            linha_2222222222222:
+
+            cmp linha, 36h
+            jne linha_3333333333333
+
+                mov bx, 50
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim5
+            
+            linha_3333333333333:
+
+        coluna_55:
+
+        mov al, coluna
+        cmp al, 'f'
+        jne coluna_555
+
+
+            cmp linha, 37h
+            jne linha_11111111111111
+
+                mov bx, 60
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim5
+
+            linha_11111111111111:
+
+            cmp linha, 38h
+            jne linha_22222222222222
+
+                mov bx, 70
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim5
+            
+            linha_22222222222222:
+
+            cmp linha, 39h
+            jne linha_33333333333333
+
+                mov bx, 80
+                mov si, 5
+                call altera_valor
+                limpa_tela
+                jmp fim5
+            
+            linha_33333333333333:
+
+        coluna_555:
+
+
+        fim5:
+
+        ret
+    coluna_f endp
+
+    coluna_g proc
+
+        mov al, coluna
+        cmp al, 'g'
+        jne coluna_6
+
+            mov bx, 0
+
+            pula_linha
+
+            call entra_linha
+
+            cmp linha, 31h
+            jne linha_111111111111111
+
+                mov si, 6
+                call altera_valor
+                limpa_tela
+                jmp fim6
+
+            linha_111111111111111:
+
+            cmp linha, 32h
+            jne linha_222222222222222
+
+                mov bx, 10
+                mov si, 6
+                call altera_valor
+                limpa_tela
+                jmp fim6
+            
+            linha_222222222222222:
+
+            cmp linha, 33h
+            jne linha_333333333333333
+
+                mov bx, 20
+                mov si, 6
+                call altera_valor
+                limpa_tela
+                jmp fim6
+            
+            linha_333333333333333:
 
         coluna_6:
+
+        
+        cmp coluna, 'g'
+        jne coluna_66
+
+    
+            cmp linha, 34h
+            jne linha_1111111111111111
+
+                mov bx, 30
+                mov si, 6
+                call altera_valor
+                limpa_tela
+                jmp fim6
+
+            linha_1111111111111111:
+
+            cmp linha, 35h
+            jne linha_2222222222222222
+
+                mov bx, 40
+                mov si, 6
+                call altera_valor
+                limpa_tela
+                jmp fim6
+            
+            linha_2222222222222222:
+
+            cmp linha, 36h
+            jne linha_3333333333333333
+
+                mov bx, 50
+                mov si, 6
+                call altera_valor
+                limpa_tela
+                jmp fim6
+            
+            linha_3333333333333333:
+
+        coluna_66:
+
+        mov al, coluna
+        cmp al, 'g'
+        jne coluna_666
+
+
+            cmp linha, 37h
+            jne linha_11111111111111111
+
+                mov bx, 60
+                mov si, 6
+                call altera_valor
+                limpa_tela
+                jmp fim6
+
+            linha_11111111111111111:
+
+            cmp linha, 38h
+            jne linha_22222222222222222
+
+                mov bx, 70
+                mov si, 6
+                call altera_valor
+                limpa_tela
+                jmp fim6
+            
+            linha_22222222222222222:
+
+            cmp linha, 39h
+            jne linha_33333333333333333
+
+                mov bx, 80
+                mov si, 6
+                call altera_valor
+                limpa_tela
+                jmp fim6
+            
+            linha_33333333333333333:
+
+        coluna_666:
+
+
+        fim6:
+
+        ret
+    coluna_g endp
+
+    coluna_h proc
+
+        mov al, coluna
+        cmp al, 'h'
+        jne coluna_7
+
+            mov bx, 0
+
+            pula_linha
+
+            call entra_linha
+
+            cmp linha, 31h
+            jne linha_111111111111111111
+
+                mov si, 7
+                call altera_valor
+                limpa_tela
+                jmp fim7
+
+            linha_111111111111111111:
+
+            cmp linha, 32h
+            jne linha_222222222222222222
+
+                mov bx, 10
+                mov si, 7
+                call altera_valor
+                limpa_tela
+                jmp fim7
+            
+            linha_222222222222222222:
+
+            cmp linha, 33h
+            jne linha_333333333333333333
+
+                mov bx, 20
+                mov si, 7
+                call altera_valor
+                limpa_tela
+                jmp fim7
+            
+            linha_333333333333333333:
+
+        coluna_7:
+
+        
+        cmp coluna, 'h'
+        jne coluna_77
+
+    
+            cmp linha, 34h
+            jne linha_1111111111111111111
+
+                mov bx, 30
+                mov si, 7
+                call altera_valor
+                limpa_tela
+                jmp fim7
+
+            linha_1111111111111111111:
+
+            cmp linha, 35h
+            jne linha_2222222222222222222
+
+                mov bx, 40
+                mov si, 7
+                call altera_valor
+                limpa_tela
+                jmp fim7
+            
+            linha_2222222222222222222:
+
+            cmp linha, 36h
+            jne linha_3333333333333333333
+
+                mov bx, 50
+                mov si, 7
+                call altera_valor
+                limpa_tela
+                jmp fim7
+            
+            linha_3333333333333333333:
+
+        coluna_77:
+
+        mov al, coluna
+        cmp al, 'h'
+        jne coluna_777
+
+
+            cmp linha, 37h
+            jne linha_11111111111111111111
+
+                mov bx, 60
+                mov si, 7
+                call altera_valor
+                limpa_tela
+                jmp fim7
+
+            linha_11111111111111111111:
+
+            cmp linha, 38h
+            jne linha_22222222222222222222
+
+                mov bx, 70
+                mov si, 7
+                call altera_valor
+                limpa_tela
+                jmp fim7
+            
+            linha_22222222222222222222:
+
+            cmp linha, 39h
+            jne linha_33333333333333333333
+
+                mov bx, 80
+                mov si, 7
+                call altera_valor
+                limpa_tela
+                jmp fim7
+            
+            linha_33333333333333333333:
+
+        coluna_777:
+
+
+        fim7:
+
+        ret
+    coluna_h endp
+
+    coluna_i proc
+
+        mov al, coluna
+        cmp al, 'i'
+        jne coluna_8
+
+            mov bx, 0
+
+            pula_linha
+
+            call entra_linha
+
+            cmp linha, 31h
+            jne linha_111111111111111111111
+
+                mov si, 8
+                call altera_valor
+                limpa_tela
+                jmp fim8
+
+            linha_111111111111111111111:
+
+            cmp linha, 32h
+            jne linha_222222222222222222222
+
+                mov bx, 10
+                mov si, 8
+                call altera_valor
+                limpa_tela
+                jmp fim8
+            
+            linha_222222222222222222222:
+
+            cmp linha, 33h
+            jne linha_333333333333333333333
+
+                mov bx, 20
+                mov si, 8
+                call altera_valor
+                limpa_tela
+                jmp fim8
+            
+            linha_333333333333333333333:
+
+        coluna_8:
+
+        
+        cmp coluna, 'i'
+        jne coluna_88
+
+    
+            cmp linha, 34h
+            jne linha_1111111111111111111111
+
+                mov bx, 30
+                mov si, 8
+                call altera_valor
+                limpa_tela
+                jmp fim8
+
+            linha_1111111111111111111111:
+
+            cmp linha, 35h
+            jne linha_2222222222222222222222
+
+                mov bx, 40
+                mov si, 8
+                call altera_valor
+                limpa_tela
+                jmp fim8
+            
+            linha_2222222222222222222222:
+
+            cmp linha, 36h
+            jne linha_3333333333333333333333
+
+                mov bx, 50
+                mov si, 8
+                call altera_valor
+                limpa_tela
+                jmp fim8
+            
+            linha_3333333333333333333333:
+
+        coluna_88:
+
+        mov al, coluna
+        cmp al, 'i'
+        jne coluna_888
+
+
+            cmp linha, 37h
+            jne linha_11111111111111111111111
+
+                mov bx, 60
+                mov si, 8
+                call altera_valor
+                limpa_tela
+                jmp fim8
+
+            linha_11111111111111111111111:
+
+            cmp linha, 38h
+            jne linha_22222222222222222222222
+
+                mov bx, 70
+                mov si, 8
+                call altera_valor
+                limpa_tela
+                jmp fim8
+            
+            linha_22222222222222222222222:
+
+            cmp linha, 39h
+            jne linha_33333333333333333333333
+
+                mov bx, 80
+                mov si, 8
+                call altera_valor
+                limpa_tela
+                jmp fim8
+            
+            linha_33333333333333333333333:
+
+        coluna_888:
+
+
+        fim8:
+
+        ret
+    coluna_i endp
+
+    coluna_a_facil proc
+
+        cmp coluna, 'a'
+            jne coluna_01
+            
+                mov bx, 0
+                pula_linha
+
+                call entra_linha
+
+                cmp linha, 31h
+                jne linha_01
+
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim01
+                    
+                linha_01:
+                
+                cmp linha, 32h
+                jne linha_02
+
+                    mov bx, 10
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim01
+
+                linha_02:
+
+                cmp linha, 33h
+                jne linha_03
+
+                    mov bx, 10
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim01
+
+                linha_03:
+
+            coluna_01:
+            
+            cmp coluna, 'a'
+            jne coluna_001
+                cmp linha, 34h
+                jne linha_04
+
+                    mov bx, 15
+                    mov si, 0
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim01
+
+                linha_04:
+
+            coluna_001:
+
+        fim01:
+
+        ret
+    coluna_a_facil endp
+
+    coluna_b_facil proc
+    
+        cmp coluna, 'b'
+            jne coluna_02
+            
+                mov bx, 0
+                pula_linha
+
+                call entra_linha
+
+                cmp linha, 31h
+                jne linha_001
+
+                    mov si, 1
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim01
+                    
+                linha_001:
+                
+                cmp linha, 32h
+                jne linha_002
+
+                    mov bx, 5
+                    mov si, 1
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim02
+
+                linha_002:
+
+                cmp linha, 33h
+                jne linha_003
+
+                    mov bx, 10
+                    mov si, 1
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim02
+
+                linha_003:
+
+            coluna_02:
+            
+            cmp coluna, 'b'
+            jne coluna_002
+                cmp linha, 34h
+                jne linha_004
+
+                    mov bx, 15
+                    mov si, 1
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim02
+
+                linha_004:
+
+            coluna_002:
+
+        fim02:
+
+
+    ret
+    coluna_b_facil endp
+
+    coluna_c_facil proc
+    
+    coluna_c_facil endp
+
+    coluna_d_facil proc
+    
+    coluna_d_facil endp
+
+; Altera o valor da posição indicada
+    verifica_posicao proc 
+
+        call entra_coluna        
+
+            call coluna_a
+    
+            call coluna_b
+
+            call coluna_c
+
+            call coluna_d
+
+            call coluna_e
+
+            call coluna_f
+
+            call coluna_g
+
+            call coluna_h
+
+            call coluna_i
            
-        fim:
         ret
     verifica_posicao endp
+
+; Altera o valor da posição indicada 
+    verifica_posicao_facil proc
+
+        call entra_coluna
+
+            call coluna_a_facil
+
+            call coluna_b_facil
+
+            jmp teste
+            
+            call coluna_c_facil
+
+            call coluna_d_facil
+
+
+    teste:
+    ret
+    verifica_posicao_facil endp
 
 ; Verifica as linhas e colunas com a reposta correta
   ;  verifica_resposta_certa proc
@@ -869,13 +1900,20 @@ endm
         lea dx, cabecalho
         int 21h
 
+        pula_linha
+
         mov ah, 09
         lea dx, Titulo
         int 21h
 
+        pula_linha
+
         mov ah, 09
         lea dx, cabecalho
         int 21h
+        
+        pula_linha
+
 
     ret
     cabecalho1 endp
@@ -915,11 +1953,21 @@ endm
         lea dx, press
         int 21h
 
+        mov ah, 01
+        int 21h
+
+        pula_linha
+        pula_linha
+
         mov ah, 09 
         lea dx, cabecalho
         int 21h
 
-        pula_linha
+       
+        
+        
+
+        limpa_tela
 
         mov ah, 09 
         lea dx, seleciona_dificuldade
@@ -964,7 +2012,7 @@ endm
     segmento endp
 
 ; Encerramento
-    encerra proc
+    encerra proc far
 
         mov ah, 09
         lea dx, encerramento
@@ -1012,6 +2060,32 @@ endm
         lea dx, obrigado
         int 21h
 
+        pula_linha
+
+        mov ah, 09 
+        lea dx, jogar_novamente
+        int 21h
+
+        mov ah, 01
+        int 21h
+
+        cmp al, 's'
+        jne sim
+
+            jmp comeca_denovo
+
+        sim:
+        cmp al, 'S'
+        jne sim1
+
+            jmp comeca_denovo
+
+        sim1:
+
+        cmp al, 'n'
+        jmp final
+
+        final:
         mov ah, 4ch
         int 21h
     ret
@@ -1023,7 +2097,6 @@ endm
         cmp al, 31h
         jne facil1
 
-    
             call imp_matriz_facil
             jmp continua_programa
 
@@ -1047,7 +2120,6 @@ endm
         cmp al, 31h
         jne facil01
 
-    
             call imp_matriz_resposta_facil
             jmp continua_programa0
 
@@ -1063,14 +2135,38 @@ endm
 
         continua_programa0:
 
-
         ret
     valida_dificuldade_resposta endp
+
+    valida_dificuldade_validacao proc
+
+        call nivel_dificuldade
+        cmp al, 31h
+        jne facil001
+
+            call verifica_posicao_facil
+            jmp continua_programa01
+
+        facil001:
+
+        cmp al, 32h
+        jne medio001
+
+            call verifica_posicao
+            jmp continua_programa01
+
+        medio001:
+
+        continua_programa01:
+
+    ret
+    valida_dificuldade_validacao endp
+    
     main proc
     
-        call segmento
+        comeca_denovo:                      ; Vem da Função encerra para começar denovo o programa
 
-        ;call entra_matriz
+        call segmento
 
         limpa_tela
 
@@ -1088,7 +2184,6 @@ endm
         pula_linha
         pula_linha
 
-
         call valida_dificuldade
 
         mov cx, 999
@@ -1097,7 +2192,7 @@ endm
         
         pula_linha
 
-        call verifica_posicao
+        call valida_dificuldade_validacao
         
         continua:
 
@@ -1110,9 +2205,7 @@ endm
         pula_linha
         pula_linha
 
-
         call valida_dificuldade
-
         call encerra
         
         loop outro_valor 
