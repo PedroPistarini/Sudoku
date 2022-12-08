@@ -43,15 +43,17 @@ endm
     linha db ?
     valor db ?
     dificuldade db ?
+    matriz db ?
+    matriz_resposta db ?
 
     ; Cabeçalho
     Titulo db     '<------------------------------- Sudoku - Assembly ----------------------------> $'
     cabecalho db  '============================================================================== $'
-    letras_colunas db ,13,10,'                        a   b   c   d   e   f   g   h   i $'
+    
 
     ; Regras
     regras1 db ,13,' 1- SUDOKU eh um jogo de raciocinio e logica! $'
-    regras2 db ,13,' 2- Complete as " ? " uilizando numeros de 1 a 9. $'
+    regras2 db ,13,' 2- Complete os " espaços " uilizando numeros de 1 a 9. $'
     regras3 db ,13,' 3- Seguinte regra: Nao podem haver numeros repetidos nas linhas horizontais e  verticais $'
     press db '  ->Pressione qualquer tecla para comecar!, Boa sorte!$'
 
@@ -59,6 +61,7 @@ endm
     seleciona_dificuldade db ,13,10, '-> Selecione um nivel de dificuldade! $'
     dificuldade_facil db ,13,10, '[01] - Facil $'
     dificuldade_medio db '[02] - Medio $'
+    dificuldade_dificil db '[03] - Dificil $'
     pressione_um_numero db,13,10, 'Selecione um numero de 1 a 3: $'
 
 
@@ -75,14 +78,16 @@ endm
     encerramento db ,13,10, '-> Se quiser encerrar aperte <enter> se nao, aperte qualquer tecla! $'
     obrigado db ,13,10, '-> Obrigado por jogar!$'
     resposta db ,13,10, ' -- RESPOSTA --: $'
-    vencerdor db ,13,10,' -- PARABENS VOCÊ CONSEGUIU -- $'
+    vencedor db ,13,10,' -- PARABENS VOCÊ CONSEGUIU -- $'
     jogar_novamente db ,13,10, '-> Deseja jogar novamente? [s / n]: $'
   
     
-    matriz_facil            db '????$'
-                            db '42??$'
-                            db '?31?$'
-                            db '????$'
+    ; Criação do Sudoku nivel Fácil
+    letras_colunas_facil db ,13,10,'                        a   b    c   d $'
+    matriz_facil            db '    $'
+                            db '42  $'
+                            db ' 31 $'
+                            db '    $'
 
     matriz_resposta_facil   db '3142$'
                             db '4231$'
@@ -90,15 +95,18 @@ endm
                             db '1423$'
     
 
-    matriz_medio            db  '1??3??92?$'
-                            db  '3??4??85?$'
-                            db  '6??9?1?7?$'
-                            db  '479?1????$'
-                            db  '??2?6?1??$'
-                            db  '?162?9?37$'
-                            db  '?5?8?7??2$'
-                            db  '?84??2??3$'
-                            db  '?63??5??9$'
+
+    ; Criação da sudoku de nivel Médio
+    letras_colunas db ,13,10,'                        a   b   c    d   e   f    g   h   i $'
+    matriz_medio            db  '1  3  92 $'
+                            db  '3  4  85 $'
+                            db  '6  9 1 7 $'
+                            db  '479 1    $'
+                            db  '  2 6 1  $'
+                            db  ' 162 9 37$'
+                            db  ' 5 8 7  2$'
+                            db  ' 84  2  3$'
+                            db  ' 63  5  9$'
 
     matriz_resposta_medio   db  '145378926$'
                             db  '397426851$'
@@ -109,6 +117,28 @@ endm
                             db  '951837642$'
                             db  '784692513$'
                             db  '263145789$'
+
+
+    matriz_dificil          db  '4       6$'
+                            db  ' 3     8 $'
+                            db  '  9   7  $'
+                            db  '   7 1   $'
+                            db  '    3    $'
+                            db  '   9 4   $'
+                            db  '  8   5  $'
+                            db  ' 4     6 $'
+                            db  '3       9$'
+
+
+    matriz_resposta_dificil db  '415378296$'
+                            db  '237169485$'
+                            db  '689425731$'
+                            db  '893751624$'
+                            db  '574236918$'
+                            db  '162984257$'
+                            db  '928617543$'
+                            db  '741593862$'
+                            db  '366842179$'
                     
 .code
 
@@ -120,7 +150,7 @@ endm
 
         volta:
 
-        espaco 
+        espaco              ; Loop para dar 30 espacos juntos, utilizado para estetica
 
         dec di
         cmp di, 0
@@ -128,46 +158,6 @@ endm
 
     ret
     espacao endp
-
-; Não é mais necessário
-    entra_matriz proc
-
-        xor bx, bx
-        xor si, si
-
-        mov ch, 9                               ; Contador de linhas                         
-
-        outra_linha:
-        
-            mov cl, 9                       ; Contador de colunas
-            xor si, si              
-
-                outra_coluna:   
-               
-                    mov al, '?'
-
-                    mov matriz_medio[bx][si], al
-            
-                    inc si                      ; passando para a proximo numero
-                    dec cl                      ; Decrementa cl ( linha )
-                
-                jnz outra_coluna            ; Quando cl for 0 pula linha ( Matriz )
-
-            inc bx                      ; Adiciona 1 em bx = Linhas
-
-            
-
-            mov ah, 02                  
-            mov dl, 10                  ; Pula linha
-            int 21h
-
-            add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
-            dec ch                      ; Tira 1 do contador de linhas
-            
-        jnz outra_linha                 
-    
-    ret
-    entra_matriz endp
 
 ; Imprime Matriz
     imp_matriz_facil proc
@@ -187,26 +177,40 @@ endm
 
                 inc dh
                 mov dl,dh
-                add dl, 30h
+                add dl, 30h                 ; Printando Numeros das linhas
                 mov ah, 02
+
                 int 21h
                 mov ah,02
-                mov dl, '|'
+                mov dl, '>'
                 int 21h
 
                 espaco
-                espaco 
+                
                 
                 outra_coluna1:   
 
-                    mov ah, 02                 ; Printando numeros
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
+                    mov ah, 02                  ; Printando numeros
                     mov dl, matriz_facil[bx][si]                    
                     int 21h                         
                   
-                    espaco
-                    espaco
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
                     espaco
                     
+                    cmp cl, 3
+                    jne espac1
+
+                        espaco
+
+                    espac1:
+
                     inc si                      ; passando para a proximo numero
                     dec cl                      ; Decrementa cl ( linha )
                 
@@ -215,6 +219,13 @@ endm
             inc bx                      ; Adiciona 1 em bx = Linhas
                         
             pula_linha
+
+            cmp ch, 3
+            jne pula_pula1
+
+                pula_linha
+
+            pula_pula1:
 
             add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
             dec ch                      ; Tira 1 do contador de linhas
@@ -247,21 +258,36 @@ endm
                 mov ah, 02
                 int 21h
                 mov ah,02
-                mov dl, '|'
+                mov dl, '>'
                 int 21h
 
                 espaco
-                espaco 
+                 
                 
                 outra_coluna0001:   
+
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
 
                     mov ah, 02                 ; Printando numeros
                     mov dl, matriz_resposta_facil[bx][si]                    
                     int 21h                         
-                  
+                
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
                     espaco
-                    espaco
-                    espaco
+                    
+                    cmp cl, 3
+                    jne espac
+
+                        espaco
+
+                    espac:
+
+                     
                     
                     inc si                      ; passando para a proximo numero
                     dec cl                      ; Decrementa cl ( linha )
@@ -272,6 +298,13 @@ endm
                         
         
             pula_linha
+
+            cmp ch, 3
+            jne pula_pula
+
+                pula_linha
+            
+            pula_pula:
 
             add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
             dec ch                      ; Tira 1 do contador de linhas
@@ -303,22 +336,42 @@ endm
                 mov ah, 02
                 int 21h
                 mov ah,02
-                mov dl, '|'
+                mov dl, '>'
                 int 21h
 
                 espaco
-                espaco 
+                
                 
                 outra_coluna001:   
 
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
                     mov ah, 02                 ; Printando numeros
                     mov dl, matriz_medio[bx][si]                    
-                    int 21h                         
-                  
+                    int 21h      
+      
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
                     espaco
-                    espaco
-                    espaco
-                    
+
+                    cmp cl, 7
+                    jne estetica
+
+                        espaco
+
+                    estetica:
+
+                    cmp cl, 4
+                    jne estetica1
+
+                        espaco
+
+                    estetica1:
+
                     inc si                      ; passando para a proximo numero
                     dec cl                      ; Decrementa cl ( linha )
                 
@@ -327,6 +380,20 @@ endm
             inc bx                      ; Adiciona 1 em bx = Linhas
                         
             pula_linha
+
+            cmp ch, 7
+            jne estetica2
+
+                pula_linha
+
+            estetica2:
+
+            cmp ch, 4
+            jne estetica02
+
+                pula_linha
+
+            estetica02:
 
             add bx, 9                   ; Adiciona para entender que estou indo para proxima linha
             dec ch                      ; Tira 1 do contador de linhas
@@ -354,25 +421,46 @@ endm
 
                 inc dh
                 mov dl,dh
-                add dl, 30h
+                add dl, 30h             ; Adiconando linhas
                 mov ah, 02
                 int 21h
+
                 mov ah,02
-                mov dl, '|'
+                mov dl, '>'             ; Print '>'
                 int 21h
 
                 espaco
-                espaco 
+                 
                 
                 outra_coluna01:   
 
-                    mov ah, 02                 ; Printando numeros
-                    mov dl, matriz_resposta_medio[bx][si]                    
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
+                    mov ah, 02                 
+                    mov dl, matriz_resposta_medio[bx][si]        ; Printando valores armazenados            
                     int 21h                         
                   
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+                    
                     espaco
-                    espaco
-                    espaco
+
+                    cmp cl, 7
+                    jne estetica01
+
+                        espaco
+
+                    estetica01:
+
+                    cmp cl, 4
+                    jne estetica001
+
+                        espaco
+                        
+                    estetica001:
                     
                     inc si                      ; passando para a proximo numero
                     dec cl                      ; Decrementa cl ( linha )
@@ -380,22 +468,213 @@ endm
                 jnz outra_coluna01            ; Quando for 0 pula linha
            
             inc bx                      ; Adiciona 1 em bx = Linhas
-                        
+
+            pula_linha
+
+            cmp ch, 7
+            jne estetica002
+
+                pula_linha
+
+            estetica002:
+
+            cmp ch, 4
+            jne estetica0002
+
+                pula_linha
+
+            estetica0002:
             
-
-            mov ah, 02                  
-            mov dl, 10                  ; Pula linha
-            int 21h
-
             add bx, 9                   ; Adiciona para entender que estou indo para proxima linha
             dec ch                      ; Tira 1 do contador de linhas
             
         jnz outra_linha01       
     
-    ret
-
         ret
     imp_matriz_resposta_medio endp
+
+; Função de impressão de matrizes
+    imp_matriz_dificil proc
+
+        xor bx, bx
+        xor si, si
+
+        mov ch, 9                              ; Contador de linhas                         
+        xor dh,dh
+
+        outra_linha10:
+        
+            mov cl, 9                       ; Contador de colunas
+            xor si, si    
+
+                call espacao
+
+                inc dh
+                mov dl,dh
+                add dl, 30h
+                mov ah, 02
+                int 21h
+                mov ah,02
+                mov dl, '>'
+                int 21h
+
+                espaco
+                
+                
+                outra_coluna10:   
+
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
+                    mov ah, 02                 ; Printando numeros
+                    mov dl, matriz_dificil[bx][si]                    
+                    int 21h      
+      
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
+                    espaco
+
+                    cmp cl, 7
+                    jne esteticaa
+
+                        espaco
+
+                    esteticaa:
+
+                    cmp cl, 4
+                    jne estetica1a
+
+                        espaco
+
+                    estetica1a:
+
+                    inc si                      ; passando para a proximo numero
+                    dec cl                      ; Decrementa cl ( linha )
+                
+                jnz outra_coluna10            ; Quando for 0 pula linha
+           
+            inc bx                      ; Adiciona 1 em bx = Linhas
+                        
+            pula_linha
+
+            cmp ch, 7
+            jne estetica2a
+
+                pula_linha
+
+            estetica2a:
+
+            cmp ch, 4
+            jne estetica02a
+
+                pula_linha
+
+            estetica02a:
+
+            add bx, 9                   ; Adiciona para entender que estou indo para proxima linha
+            dec ch                      ; Tira 1 do contador de linhas
+            
+        jnz outra_linha10
+
+
+        ret
+    imp_matriz_dificil endp
+
+; Função de impressão de matrizes resposta
+    imp_matriz_resposta_dificil proc
+
+        xor bx, bx
+        xor si, si
+
+        mov ch, 9                              ; Contador de linhas                         
+        xor dh,dh
+
+        outra_linha10a:
+        
+            mov cl, 9                       ; Contador de colunas
+            xor si, si    
+
+                call espacao
+
+                inc dh
+                mov dl,dh
+                add dl, 30h
+                mov ah, 02
+                int 21h
+                mov ah,02
+                mov dl, '>'
+                int 21h
+
+                espaco
+                
+                
+                outra_coluna10a:   
+
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
+                    mov ah, 02                 ; Printando numeros
+                    mov dl, matriz_resposta_dificil[bx][si]                    
+                    int 21h      
+      
+                    mov ah, 02
+                    mov dl, '|'
+                    int 21h
+
+                    espaco
+
+                    cmp cl, 7
+                    jne estetica11
+
+                        espaco
+
+                    estetica11:
+
+                    cmp cl, 4
+                    jne estetica1aa
+
+                        espaco
+
+                    estetica1aa:
+
+                    inc si                      ; passando para a proximo numero
+                    dec cl                      ; Decrementa cl ( linha )
+                
+                jnz outra_coluna10a            ; Quando for 0 pula linha
+           
+            inc bx                      ; Adiciona 1 em bx = Linhas
+                        
+            pula_linha
+
+            cmp ch, 7
+            jne estetica2aa
+
+                pula_linha
+
+            estetica2aa:
+
+            cmp ch, 4
+            jne estetica02aa
+
+                pula_linha
+
+            estetica02aa:
+
+            add bx, 9                   ; Adiciona para entender que estou indo para proxima linha
+            dec ch                      ; Tira 1 do contador de linhas
+            
+        jnz outra_linha10a
+
+
+        ret
+
+
+        ret
+    imp_matriz_resposta_dificil endp
 
 ; Entrada de colunas pra validação
     entra_coluna proc
@@ -405,7 +684,7 @@ endm
         int 21h
 
         mov ah, 01
-        int 21h
+        int 21h                                 ; Selecionando as colunas letras de A a I
 
         mov coluna, al
 
@@ -419,8 +698,8 @@ endm
         lea dx, altera_linha
         int 21h
 
-        mov ah, 01
-        int 21h
+        mov ah, 01  
+        int 21h                             ; Selecionando a linha numeros de ( 1 a 9 )
 
         mov linha, al
 
@@ -438,25 +717,25 @@ endm
         lea dx, altera_valor1
         int 21h
         
-        mov ah, 01                             
+        mov ah, 01                                  ; Selecionando um numero a ser trocado
         int 21h 
 
         mov valor, al
 
-        call nivel_dificuldade
+        call nivel_dificuldade                      
 
         cmp al, 31h
-        jne facil
+        jne facil                                   ; Verificando seu nivel de dificuldade
 
-            mov al, valor
+            mov al, valor                           ; Voltando o valor do numero selecionado para al e continuar o processo
 
-            cmp al, matriz_facil[bx][si]
+            cmp al, matriz_facil[bx][si]            ; comparando para ver se não possui o mesmo número
             jne nao_igual
 
                 pula_linha
 
                 mov ah, 09 
-                lea dx, ja_possui
+                lea dx, ja_possui           ; Verificando se já possui o mesmo valor na determinada posição escolhida
                 int 21h
                 
                 pula_linha
@@ -482,7 +761,7 @@ endm
                 pula_linha
 
                 mov ah, 09 
-                lea dx, ja_possui
+                lea dx, ja_possui       ; Verificando se já possui o mesmo valor na determinada posição escolhida
                 int 21h
                 
                 pula_linha
@@ -504,12 +783,12 @@ endm
 ; Passagem de registrador
     nivel_dificuldade proc
 
-        mov al, dificuldade
+        mov al, dificuldade                             ; Jogando valor armazenado em dificuldade para AL para facilitar utiliza-lo
 
     ret
     nivel_dificuldade endp
 
-; Verificando COLUNAS e LINHAS
+; Verificando COLUNAS e LINHAS comando repetidos baseando todos na mesma anologia, comparações de colunas e linhas 
     coluna_a proc
 
         cmp coluna, 'a'
@@ -689,7 +968,7 @@ endm
 
             coluna_1:
 
-            cmp al, 'b'
+            cmp coluna, 'b'
             jne coluna_11
 
                 cmp linha, 34h
@@ -728,7 +1007,7 @@ endm
 
             coluna_11:
 
-            cmp al, 'b'
+            cmp coluna, 'b'
             jne coluna_111
 
                 cmp linha, 37h
@@ -1688,8 +1967,9 @@ endm
     coluna_i endp
 
     coluna_a_facil proc
-
-        cmp coluna, 'a'
+        
+        mov al, coluna
+        cmp al, 'a'
             jne coluna_01
             
                 mov bx, 0
@@ -1711,7 +1991,7 @@ endm
                 cmp linha, 32h
                 jne linha_02
 
-                    mov bx, 10
+                    mov bx, 5
                     mov si, 0
 
                     call altera_valor
@@ -1734,7 +2014,8 @@ endm
 
             coluna_01:
             
-            cmp coluna, 'a'
+            mov al, coluna
+            cmp al, 'a'
             jne coluna_001
                 cmp linha, 34h
                 jne linha_04
@@ -1772,7 +2053,7 @@ endm
 
                     call altera_valor
                     limpa_tela
-                    jmp fim01
+                    jmp fim02
                     
                 linha_001:
                 
@@ -1826,13 +2107,142 @@ endm
 
     coluna_c_facil proc
     
+        cmp coluna, 'c'
+            jne coluna_003
+            
+                mov bx, 0
+                pula_linha
+
+                call entra_linha
+
+                cmp linha, 31h
+                jne linha_0001
+
+                    mov si, 2
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim03
+                    
+                linha_0001:
+                
+                cmp linha, 32h
+                jne linha_0002
+
+                    mov bx, 5
+                    mov si, 2
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim03
+
+                linha_0002:
+
+                cmp linha, 33h
+                jne linha_0003
+
+                    mov bx, 10
+                    mov si, 2
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim03
+
+                linha_0003:
+
+            coluna_003:
+            
+            cmp coluna, 'c'
+            jne coluna_0003
+                cmp linha, 34h
+                jne linha_0004
+
+                    mov bx, 15
+                    mov si, 2
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim03
+
+                linha_0004:
+
+            coluna_0003:
+
+        fim03:
+
+    ret
     coluna_c_facil endp
 
     coluna_d_facil proc
-    
+
+        cmp coluna, 'd'
+            jne coluna_00003
+            
+                mov bx, 0
+                pula_linha
+
+                call entra_linha
+
+                cmp linha, 31h
+                jne linha_00001
+
+                    mov si, 3
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim04
+                    
+                linha_00001:
+                
+                cmp linha, 32h
+                jne linha_00002
+
+                    mov bx, 5
+                    mov si, 3
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim04
+
+                linha_00002:
+
+                cmp linha, 33h
+                jne linha_00003
+
+                    mov bx, 10
+                    mov si, 3
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim04
+
+                linha_00003:
+
+            coluna_00003:
+            
+            cmp coluna, 'd'
+            jne coluna_000003
+                cmp linha, 34h
+                jne linha_00004
+
+                    mov bx, 15
+                    mov si, 3
+
+                    call altera_valor
+                    limpa_tela
+                    jmp fim04
+
+                linha_00004:
+
+            coluna_000003:
+
+        fim04:
+
+    ret
     coluna_d_facil endp
 
-; Altera o valor da posição indicada
+
+; Alteração dos valores com sua determinada coodernada indicada
     verifica_posicao proc 
 
         call entra_coluna        
@@ -1857,8 +2267,6 @@ endm
            
         ret
     verifica_posicao endp
-
-; Altera o valor da posição indicada 
     verifica_posicao_facil proc
 
         call entra_coluna
@@ -1866,32 +2274,98 @@ endm
             call coluna_a_facil
 
             call coluna_b_facil
-
-            jmp teste
             
             call coluna_c_facil
 
             call coluna_d_facil
 
-
     teste:
     ret
     verifica_posicao_facil endp
 
-; Verifica as linhas e colunas com a reposta correta
-  ;  verifica_resposta_certa proc
+ Verifica as linhas e colunas com a reposta correta
+    verifica_resposta_certa_facil proc
 
-        ;cmp matriz[bx][si], matriz_resposta[bx][si]
-       ; jne nao_igual0
+        xor bx, bx
+        xor si, si
 
-           ; mov ah, 09 
-            ;lea dx, vencedor
-            ;int 21h
+        mov ch, 4                               ; Contador de linhas                         
 
-        ;nao_igual0:
+        outra_linhaF:
+        
+            mov cl, 4                       ; Contador de colunas
+            xor si, si 
 
-       ; ret
-   ; verifica_resposta_certa endp
+                outra_colunaF:   
+
+                    xor dl, dl        
+                    mov dl, matriz_facil[bx][si]     
+                    mov matriz, dl               
+                                            
+                    call verifica_resposta_facil
+                    cmp matriz, matriz_resposta
+                    jne CONSEGUIU
+
+                        mov ah,09
+                        lea dx, vencedor
+                        int 21h
+
+                    CONSEGUIU:
+                    
+
+
+
+                    inc si                      ; passando para a proximo numero
+                    dec cl                      ; Decrementa cl ( linha )
+                
+                jnz outra_colunaF            ; Quando for 0 pula linha
+           
+            inc bx                      ; Adiciona 1 em bx = Linhas
+                        
+
+            add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
+            dec ch                      ; Tira 1 do contador de linhas
+            
+        jnz outra_linhaF
+       
+         ret
+    verifica_resposta_certa_facil endp
+
+    verifica_resposta_facil proc
+
+        xor bx, bx
+        xor si, si
+
+        mov ch, 4                               ; Contador de linhas                         
+
+        outra_linhaFR:
+        
+            mov cl, 4                       ; Contador de colunas
+            xor si, si 
+
+                outra_colunaFR:   
+
+                    xor dh, dh        
+                    mov dh, matriz_facil[bx][si]     
+                    mov matriz_resposta, dh               
+                                            
+                    call verifica_resposta_certa_facil
+
+                    inc si                      ; passando para a proximo numero
+                    dec cl                      ; Decrementa cl ( linha )
+                
+                jnz outra_colunaFR            ; Quando for 0 pula linha
+           
+            inc bx                      ; Adiciona 1 em bx = Linhas
+                        
+
+            add bx, 4                    ; Adiciona para entender que estou indo para proxima linha
+            dec ch                      ; Tira 1 do contador de linhas
+            
+        jnz outra_linhaF
+
+        ret
+    verifica_resposta_facil endp
 
 ; Printa cabeçalho
     cabecalho1 proc
@@ -1903,7 +2377,7 @@ endm
         pula_linha
 
         mov ah, 09
-        lea dx, Titulo
+        lea dx, Titulo                  ; Prints esteticos
         int 21h
 
         pula_linha
@@ -1930,7 +2404,7 @@ endm
         pula_linha
 
         mov ah, 09
-        lea dx, regras2
+        lea dx, regras2                 ; Prints de regras do sudoku
         int 21h
 
         pula_linha
@@ -1954,7 +2428,7 @@ endm
         int 21h
 
         mov ah, 01
-        int 21h
+        int 21h                     ; Selecionar qualquer tecla para avançar no programa
 
         pula_linha
         pula_linha
@@ -1963,14 +2437,10 @@ endm
         lea dx, cabecalho
         int 21h
 
-       
-        
-        
-
         limpa_tela
 
         mov ah, 09 
-        lea dx, seleciona_dificuldade
+        lea dx, seleciona_dificuldade   
         int 21h
 
         pula_linha
@@ -1988,13 +2458,19 @@ endm
         pula_linha
 
         mov ah, 09 
+        lea dx, dificuldade_dificil
+        int 21h
+
+        pula_linha
+
+        mov ah, 09 
         lea dx, pressione_um_numero
         int 21h
 
-        mov ah, 01
+        mov ah, 01                                          ; Digita dificuldade ( 1 a 3 )
         int 21h
 
-        mov dificuldade, al
+        mov dificuldade, al                             
         
 
         call nivel_dificuldade
@@ -2002,14 +2478,161 @@ endm
     ret
     regra endp
 
-; Segmento
-    segmento proc
+; Validações para o uso da dificuldade, otimizando o processo não ficando algo muito extenso 
+    valida_dificuldade proc 
 
-        mov ax, @data
-        mov ds, ax
+        call nivel_dificuldade
+        cmp al, 31h
+        jne facil1
+
+            call imp_matriz_facil
+            jmp continua_programa
+
+        facil1:                                         ; Imprime dificuldade através da dificuldade selecionada
+
+        cmp al, 32h
+        jne medio1
+
+            call imp_matriz_medio
+            jmp continua_programa
+
+        medio1:
+
+        continua_programa:
+
+        cmp al, 33h
+        jne dificil1
+
+            call imp_matriz_dificil
+            jmp continua_programa
+
+        dificil1:
+    ret
+    valida_dificuldade endp
+
+    valida_dificuldade_resposta proc
+
+        call nivel_dificuldade
+        cmp al, 31h
+        jne facil01
+
+            call imp_matriz_resposta_facil  
+            jmp continua_programa0
+
+        facil01:                                                ; Dependendo da dificuldade selecionada, altera no print da resposta
+
+        cmp al, 32h
+        jne medio01
+
+            call imp_matriz_resposta_medio
+            jmp continua_programa0
+
+        medio01:
+
+        cmp al, 33h
+        jne dificil01
+
+            call imp_matriz_resposta_dificil
+            jmp continua_programa0
+
+        dificil01:
+
+        continua_programa0:
 
         ret
-    segmento endp
+    valida_dificuldade_resposta endp
+
+    valida_dificuldade_validacao proc
+
+        call nivel_dificuldade
+        cmp al, 31h
+        jne facil001
+
+            call verifica_posicao_facil
+            jmp continua_programa01
+
+        facil001:                                              ; Dependendo da dificuldade muda a verificação
+                                                            
+        cmp al, 32h
+        jne medio001
+
+            call verifica_posicao
+            jmp continua_programa01
+
+        medio001:
+
+        cmp al, 33h
+        jne dificil001
+
+            call verifica_posicao
+            jmp continua_programa01
+
+        dificil001:
+
+        continua_programa01:
+
+    ret
+    valida_dificuldade_validacao endp
+    
+    verifica_titulo proc
+
+        call nivel_dificuldade
+        cmp al, 31h
+        jne facil0001
+
+            mov ah, 09
+            lea dx, letras_colunas_facil
+            int 21h 
+            jmp continua_programa001
+
+        facil0001:                                              ; Dependendo da dificuldade muda a verificação
+                                                            
+        cmp al, 32h
+        jne medio0001
+
+            mov ah, 09
+            lea dx, letras_colunas
+            int 21h 
+            jmp continua_programa001
+
+        medio0001:
+
+        cmp al, 33h
+        jne dificil0001
+
+            mov ah, 09
+            lea dx, letras_colunas
+            int 21h 
+            jmp continua_programa001
+
+        dificil0001:
+
+        continua_programa001:
+
+        ret
+    verifica_titulo endp
+
+    comeco_main proc
+
+        mov ax, @data                       ; Segmento de data
+        mov ds, ax
+
+        limpa_tela
+
+        call cabecalho1                     ; Prints
+        call regra
+
+        limpa_tela
+
+        call cabecalho1
+
+        call verifica_titulo                   ; Funcao de print de coordenadas
+
+        pula_linha
+        pula_linha
+
+    ret
+    comeco_main endp
 
 ; Encerramento
     encerra proc far
@@ -2026,7 +2649,7 @@ endm
 
             pula_linha
 
-            call verifica_posicao
+            call valida_dificuldade_validacao                   ; Quando selecionado <enter> programa é encerrado
             ;call verifica_resposta_certa
 
             jmp continua
@@ -2052,18 +2675,17 @@ endm
         pula_linha
         pula_linha
 
-        call valida_dificuldade_resposta
+        call valida_dificuldade_resposta                               ; PRINTS
 
         pula_linha
-        call espacao
         mov ah, 09
         lea dx, obrigado
         int 21h
 
-        pula_linha
+        pula_linha                                              ; PRINTS
 
         mov ah, 09 
-        lea dx, jogar_novamente
+        lea dx, jogar_novamente                     
         int 21h
 
         mov ah, 01
@@ -2072,8 +2694,8 @@ endm
         cmp al, 's'
         jne sim
 
-            jmp comeca_denovo
-
+            jmp comeca_denovo                                     ; Verificando se o jogador deseja jogar outro jogo
+                                                            
         sim:
         cmp al, 'S'
         jne sim1
@@ -2085,131 +2707,42 @@ endm
         cmp al, 'n'
         jmp final
 
-        final:
+        final:                                                  ; Caso não, programa é encerrado
+
         mov ah, 4ch
         int 21h
     ret
     encerra endp
 
-    valida_dificuldade proc 
-
-        call nivel_dificuldade
-        cmp al, 31h
-        jne facil1
-
-            call imp_matriz_facil
-            jmp continua_programa
-
-        facil1:
-
-        cmp al, 32h
-        jne medio1
-
-            call imp_matriz_medio
-            jmp continua_programa
-
-        medio1:
-
-        continua_programa:
-    ret
-    valida_dificuldade endp
-
-    valida_dificuldade_resposta proc
-
-        call nivel_dificuldade
-        cmp al, 31h
-        jne facil01
-
-            call imp_matriz_resposta_facil
-            jmp continua_programa0
-
-        facil01:
-
-        cmp al, 32h
-        jne medio01
-
-            call imp_matriz_resposta_medio
-            jmp continua_programa0
-
-        medio01:
-
-        continua_programa0:
-
-        ret
-    valida_dificuldade_resposta endp
-
-    valida_dificuldade_validacao proc
-
-        call nivel_dificuldade
-        cmp al, 31h
-        jne facil001
-
-            call verifica_posicao_facil
-            jmp continua_programa01
-
-        facil001:
-
-        cmp al, 32h
-        jne medio001
-
-            call verifica_posicao
-            jmp continua_programa01
-
-        medio001:
-
-        continua_programa01:
-
-    ret
-    valida_dificuldade_validacao endp
-    
     main proc
     
         comeca_denovo:                      ; Vem da Função encerra para começar denovo o programa
 
-        call segmento
+        call comeco_main                    ; Jogado o começo para ficar com menos informação a main
 
-        limpa_tela
+        call valida_dificuldade               ; Verificando a dificulade do jogo!
 
-        call cabecalho1
-        call regra
-
-        limpa_tela
-
-        call cabecalho1
-
-        mov ah, 09
-        lea dx, letras_colunas
-        int 21h
-
-        pula_linha
-        pula_linha
-
-        call valida_dificuldade
-
-        mov cx, 999
-
+        mov cx, 999                           ; Colocando uma quantidade de vezes sem limite de quantas vezes pode se alterar entre os valores das coordenadas
         outro_valor:
         
-        pula_linha
+            pula_linha
+            call valida_dificuldade_validacao       ; Verificando qual dificuldade
+            
+            continua:
 
-        call valida_dificuldade_validacao
-        
-        continua:
+                call cabecalho1                          ; Print
 
-        call cabecalho1
+                call verifica_titulo                    ; print coordenadas
 
-        mov ah, 09
-        lea dx, letras_colunas
-        int 21h
+                pula_linha
+                pula_linha
 
-        pula_linha
-        pula_linha
+                call valida_dificuldade    
 
-        call valida_dificuldade
-        call encerra
+            call encerra
         
         loop outro_valor 
     
-    
+
     main endp
 END main
