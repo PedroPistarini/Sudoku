@@ -53,7 +53,7 @@ endm
 
     ; Regras
     regras1 db ,13,' 1- SUDOKU eh um jogo de raciocinio e logica! $'
-    regras2 db ,13,' 2- Complete os " espaços " uilizando numeros de 1 a 9. $'
+    regras2 db ,13,' 2- Complete os " espacos " uilizando numeros de 1 a 9. $'
     regras3 db ,13,' 3- Seguinte regra: Nao podem haver numeros repetidos nas linhas horizontais e  verticais $'
     press db '  ->Pressione qualquer tecla para comecar!, Boa sorte!$'
 
@@ -2283,7 +2283,6 @@ endm
     ret
     verifica_posicao_facil endp
 
- Verifica as linhas e colunas com a reposta correta
     verifica_resposta_certa_facil proc
 
         xor bx, bx
@@ -2303,7 +2302,7 @@ endm
                     mov matriz, dl               
                                             
                     call verifica_resposta_facil
-                    cmp matriz, matriz_resposta
+                    ;cmp matriz, matriz_resposta
                     jne CONSEGUIU
 
                         mov ah,09
